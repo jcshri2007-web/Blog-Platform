@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inkwell — A Blog Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,500;0,700;0,900;1,300;1,700&family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & ROOT ── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#1a1612;
+  --ink2:#3d352c;
+  --ink3:#7a6e62;
+  --ink4:#b0a49a;
+  --cream:#f7f3ed;
+  --cream2:#ede8e0;
+  --cream3:#e0d9cf;
+  --surface:#ffffff;
+  --accent:#c94a1a;
+  --accent2:#e8611d;
+  --accent-light:#fdf0ea;
+  --teal:#0f6b6b;
+  --teal-light:#e6f4f4;
+  --gold:#b07d1a;
+  --gold-light:#fdf5e0;
+  --border:#d8d0c4;
+  --shadow:0 2px 12px rgba(26,22,18,.08);
+  --shadow2:0 8px 40px rgba(26,22,18,.14);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Lora',Georgia,serif;background:var(--cream);color:var(--ink);min-height:100vh;font-size:16px;line-height:1.7}
+h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
+button,input,textarea,select{font-family:'Lora',serif;outline:none}
+button{cursor:pointer;border:none}
+a{text-decoration:none;color:inherit}
+img{display:block;max-width:100%}
+
+/* ── SCREENS ── */
+.screen{display:none}
+.screen.active{display:block}
+
+/* ══════════════ AUTH ══════════════ */
+#auth-screen{min-height:100vh;background:var(--ink);display:none;align-items:center;justify-content:center;padding:1.5rem;position:relative;overflow:hidden}
+#auth-screen.active{display:flex}
+#auth-screen::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.025'%3E%3Cpath d='M40 0L80 40L40 80L0 40Z'/%3E%3C/g%3E%3C/svg%3E");opacity:.5}
+.auth-card{background:var(--surface);border-radius:20px;padding:3rem 2.5rem;width:100%;max-width:440px;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.4)}
+.auth-brand{text-align:center;margin-bottom:2.5rem}
+.auth-brand h1{font-size:42px;color:var(--ink);letter-spacing:-1px;font-style:italic}
+.auth-brand h1 span{color:var(--accent);font-style:normal}
+.auth-brand p{color:var(--ink3);font-size:14px;margin-top:6px;font-style:italic}
+.auth-tabs{display:flex;background:var(--cream2);border-radius:10px;padding:4px;gap:4px;margin-bottom:2rem}
+.auth-tab{flex:1;padding:10px;border-radius:8px;background:transparent;color:#444;font-size:14px;font-weight:600;cursor:pointer;transition:.18s;font-family:'Fraunces',serif;letter-spacing:.2px;border:none}
+.auth-tab.active{background:#fff;color:var(--ink);box-shadow:0 1px 6px rgba(0,0,0,.12)}
+.auth-tab:hover:not(.active){background:var(--cream3);color:var(--ink)}
+.auth-error{background:#fdecea;color:#b03020;font-size:13px;padding:10px 13px;border-radius:8px;margin-bottom:1rem;display:none;border:1px solid #f0bdb0;font-family:'DM Mono',monospace}
+.fg{margin-bottom:1.1rem}
+.fl{display:block;font-size:11px;font-weight:600;color:#444;margin-bottom:5px;text-transform:uppercase;letter-spacing:.7px;font-family:'DM Mono',monospace}
+.fi{width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:9px;font-size:15px;background:var(--cream);color:var(--ink);transition:.15s;font-family:'Lora',serif}
+.fi:focus{border-color:var(--accent);background:#fff}
+.fi::placeholder{color:var(--ink4);font-style:italic}
+select.fi{cursor:pointer}
+.btn-auth{width:100%;padding:13px;background:var(--accent);color:#fff;border-radius:9px;font-size:16px;font-weight:700;letter-spacing:.3px;transition:.18s;font-family:'Fraunces',serif;margin-top:.5rem;border:none;cursor:pointer}
+.btn-auth:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(201,74,26,.35)}
+.auth-hint{font-size:12px;color:var(--ink3);text-align:center;margin-top:1.2rem;background:var(--cream);padding:10px;border-radius:8px;border:1px solid var(--border);font-family:'DM Mono',monospace;line-height:1.7}
+.auth-hint b{color:var(--ink2)}
+
+/* ══════════════ NAVBAR ══════════════ */
+#navbar{background:var(--ink);color:#fff;position:sticky;top:0;z-index:300;border-bottom:1px solid rgba(255,255,255,.06)}
+.nav-wrap{max-width:1200px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:64px;gap:12px}
+.nav-logo{font-family:'Fraunces',serif;font-size:28px;font-style:italic;color:#fff;letter-spacing:-1px;cursor:pointer;flex-shrink:0}
+.nav-logo span{color:var(--accent2)}
+.nav-links{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.nav-btn{padding:7px 14px;border-radius:7px;font-size:13px;font-weight:600;background:transparent;color:rgba(255,255,255,.7);transition:.15s;font-family:'Fraunces',serif;border:none;cursor:pointer;letter-spacing:.2px}
+.nav-btn:hover,.nav-btn.here{background:rgba(255,255,255,.1);color:#fff}
+.nav-btn.write{background:var(--accent);color:#fff;padding:7px 16px}
+.nav-btn.write:hover{background:var(--accent2)}
+.nav-user{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;border-radius:30px;background:rgba(255,255,255,.08);cursor:pointer;transition:.15s;flex-shrink:0}
+.nav-user:hover{background:rgba(255,255,255,.14)}
+.nav-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;font-family:'Fraunces',serif;flex-shrink:0}
+.nav-uname{font-size:13px;color:rgba(255,255,255,.85);font-weight:600;font-family:'Fraunces',serif}
+.nav-role-badge{font-size:9px;background:var(--gold);color:#fff;padding:1px 6px;border-radius:99px;font-weight:700;text-transform:uppercase;font-family:'DM Mono',monospace}
+
+/* ══════════════ MAIN APP ══════════════ */
+#app{display:none;flex-direction:column;min-height:100vh}
+#app.active{display:flex}
+.page{display:none;flex:1}
+.page.active{display:block}
+.wrap{max-width:1200px;margin:0 auto;padding:0 1.5rem}
+
+/* ══════════════ HERO ══════════════ */
+.hero{background:var(--ink);color:#fff;padding:5rem 1.5rem 4rem;position:relative;overflow:hidden}
+.hero::after{content:'INKWELL';position:absolute;right:-20px;top:50%;transform:translateY(-50%) rotate(90deg);font-family:'Fraunces',serif;font-size:180px;color:rgba(255,255,255,.025);font-weight:900;pointer-events:none;white-space:nowrap;letter-spacing:-8px}
+.hero-inner{max-width:700px;position:relative}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(201,74,26,.2);border:1px solid rgba(201,74,26,.4);color:#f08060;font-size:12px;font-weight:600;padding:5px 13px;border-radius:99px;margin-bottom:1.5rem;font-family:'DM Mono',monospace;letter-spacing:.3px}
+.hero h1{font-size:clamp(38px,6vw,70px);font-weight:900;line-height:1.05;letter-spacing:-2px;margin-bottom:1.2rem;font-style:italic}
+.hero h1 em{color:var(--accent2);font-style:normal}
+.hero p{font-size:18px;color:rgba(255,255,255,.65);max-width:520px;line-height:1.65;margin-bottom:2rem;font-style:italic}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+.btn-hero{padding:13px 28px;border-radius:9px;font-size:15px;font-weight:700;font-family:'Fraunces',serif;cursor:pointer;transition:.2s;border:none;letter-spacing:.2px}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-2px);box-shadow:0 6px 20px rgba(201,74,26,.4)}
+.btn-ghost{background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.15)}
+.btn-ghost:hover{background:rgba(255,255,255,.14);color:#fff}
+
+/* ══════════════ HOME LAYOUT ══════════════ */
+.home-grid{display:grid;grid-template-columns:1fr 320px;gap:40px;padding:3rem 0 4rem}
+.posts-feed{display:flex;flex-direction:column;gap:0}
+
+/* ══════════════ POST CARD ══════════════ */
+.post-card{border-bottom:1px solid var(--border);padding:2rem 0;display:grid;grid-template-columns:1fr 140px;gap:1.5rem;align-items:start;cursor:pointer;transition:.2s}
+.post-card:first-child{border-top:1px solid var(--border)}
+.post-card:hover{padding-left:8px}
+.post-card:hover .pc-title{color:var(--accent)}
+.pc-meta-top{display:flex;align-items:center;gap:8px;margin-bottom:.6rem;flex-wrap:wrap}
+.pc-cat{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);font-family:'DM Mono',monospace;background:var(--accent-light);padding:3px 9px;border-radius:99px;border:1px solid rgba(201,74,26,.2)}
+.pc-dot{width:3px;height:3px;border-radius:50%;background:var(--ink4)}
+.pc-read{font-size:12px;color:var(--ink4);font-family:'DM Mono',monospace}
+.pc-title{font-size:22px;font-weight:700;color:var(--ink);line-height:1.25;margin-bottom:.6rem;transition:color .2s}
+.pc-excerpt{font-size:15px;color:var(--ink3);line-height:1.6;font-style:italic;margin-bottom:.85rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pc-footer{display:flex;align-items:center;gap:10px}
+.pc-author-img{width:28px;height:28px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:'Fraunces',serif;flex-shrink:0}
+.pc-author-name{font-size:13px;font-weight:600;color:var(--ink2);font-family:'Fraunces',serif}
+.pc-date{font-size:12px;color:var(--ink4);font-family:'DM Mono',monospace}
+.pc-stats{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--ink4);font-family:'DM Mono',monospace}
+.pc-thumb{width:140px;height:100px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--cream2);display:flex;align-items:center;justify-content:center;font-size:52px;border:1px solid var(--border)}
+
+/* ══════════════ SIDEBAR ══════════════ */
+.sidebar{position:sticky;top:80px;height:fit-content;display:flex;flex-direction:column;gap:24px}
+.sidebar-widget{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.sw-head{padding:1rem 1.25rem;border-bottom:1px solid var(--border);font-family:'Fraunces',serif;font-size:16px;font-weight:700;color:var(--ink);background:var(--cream)}
+.sw-body{padding:1.25rem}
+.tag-cloud{display:flex;flex-wrap:wrap;gap:7px}
+.tag-pill{padding:5px 12px;border-radius:99px;font-size:12px;font-weight:600;background:var(--cream2);color:var(--ink2);border:1px solid var(--border);cursor:pointer;transition:.15s;font-family:'DM Mono',monospace}
+.tag-pill:hover,.tag-pill.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.top-author{display:flex;align-items:center;gap:10px;padding:.6rem 0;border-bottom:1px solid var(--border)}
+.top-author:last-child{border-bottom:none;padding-bottom:0}
+.ta-img{width:36px;height:36px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;font-family:'Fraunces',serif;flex-shrink:0}
+.ta-name{font-size:14px;font-weight:700;color:var(--ink2);font-family:'Fraunces',serif}
+.ta-posts{font-size:12px;color:var(--ink4);font-family:'DM Mono',monospace}
+.ta-count{margin-left:auto;font-size:12px;color:var(--ink4);font-family:'DM Mono',monospace;background:var(--cream2);padding:2px 8px;border-radius:99px}
+
+/* ══════════════ POST DETAIL ══════════════ */
+.post-detail-wrap{max-width:720px;margin:0 auto;padding:3rem 1.5rem 5rem}
+.pd-breadcrumb{font-size:13px;color:var(--ink4);margin-bottom:1.5rem;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:6px}
+.pd-breadcrumb span{cursor:pointer;transition:.15s}
+.pd-breadcrumb span:hover{color:var(--accent)}
+.pd-cat{display:inline-flex;align-items:center;gap:6px;background:var(--accent-light);border:1px solid rgba(201,74,26,.2);color:var(--accent);font-size:12px;font-weight:700;padding:5px 13px;border-radius:99px;margin-bottom:1.2rem;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px}
+.pd-title{font-size:clamp(28px,4vw,46px);font-weight:900;color:var(--ink);line-height:1.1;letter-spacing:-1.5px;margin-bottom:1.2rem;font-style:italic}
+.pd-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:.85rem 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:2rem}
+.pd-author-img{width:42px;height:42px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;font-family:'Fraunces',serif;flex-shrink:0}
+.pd-author-name{font-size:15px;font-weight:700;color:var(--ink);font-family:'Fraunces',serif}
+.pd-meta-sub{font-size:12px;color:var(--ink4);font-family:'DM Mono',monospace}
+.pd-actions{margin-left:auto;display:flex;gap:8px}
+.pd-action-btn{padding:7px 14px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;font-family:'Fraunces',serif;border:none}
+.btn-edit-post{background:var(--teal-light);color:var(--teal);border:1px solid rgba(15,107,107,.2)}
+.btn-edit-post:hover{background:var(--teal);color:#fff}
+.btn-del-post{background:#fdecea;color:#c0392b;border:1px solid #f0bdb0}
+.btn-del-post:hover{background:#c0392b;color:#fff}
+.pd-body{font-size:17px;line-height:1.85;color:var(--ink2)}
+.pd-body p{margin-bottom:1.4rem}
+.pd-body h2{font-size:26px;font-weight:700;color:var(--ink);margin:2rem 0 .8rem;font-style:italic}
+.pd-body blockquote{border-left:3px solid var(--accent);padding:.5rem 1.5rem;margin:1.5rem 0;font-style:italic;color:var(--ink3);background:var(--cream)}
+.pd-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border)}
+.pd-like-bar{display:flex;align-items:center;gap:12px;padding:1.2rem 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin:2rem 0}
+.btn-like{display:flex;align-items:center;gap:6px;padding:9px 18px;border-radius:99px;font-size:14px;font-weight:600;cursor:pointer;transition:.2s;font-family:'Fraunces',serif;border:1.5px solid var(--border);background:transparent;color:var(--ink3)}
+.btn-like.liked{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-like:hover:not(.liked){background:var(--cream2);border-color:var(--ink4)}
+.like-count{font-size:14px;color:var(--ink3);font-family:'DM Mono',monospace}
+.share-btn{margin-left:auto;padding:9px 18px;border-radius:99px;font-size:13px;font-weight:600;cursor:pointer;background:var(--cream2);color:var(--ink2);border:1px solid var(--border);font-family:'Fraunces',serif;transition:.15s}
+.share-btn:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* ══════════════ COMMENTS ══════════════ */
+.comments-section{margin-top:3rem}
+.cs-title{font-size:26px;font-weight:700;color:var(--ink);margin-bottom:1.5rem;font-style:italic}
+.comment-form{background:var(--cream);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:2rem}
+.comment-form h4{font-size:17px;font-weight:700;color:var(--ink);margin-bottom:1rem;font-family:'Fraunces',serif}
+.fi-comment{width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:9px;font-size:15px;background:#fff;color:var(--ink);min-height:100px;resize:vertical;transition:.15s;font-family:'Lora',serif;line-height:1.6}
+.fi-comment:focus{border-color:var(--accent)}
+.fi-comment::placeholder{color:var(--ink4);font-style:italic}
+.btn-comment{padding:10px 22px;background:var(--accent);color:#fff;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-top:.8rem;transition:.15s;font-family:'Fraunces',serif;border:none;letter-spacing:.2px}
+.btn-comment:hover{background:var(--accent2)}
+.comment-list{display:flex;flex-direction:column;gap:1.25rem}
+.comment-item{display:flex;gap:12px;align-items:flex-start;padding:1.25rem;background:var(--surface);border:1px solid var(--border);border-radius:12px;transition:.2s}
+.comment-item:hover{border-color:var(--ink4)}
+.ci-avatar{width:38px;height:38px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;font-family:'Fraunces',serif;flex-shrink:0}
+.ci-body{flex:1}
+.ci-header{display:flex;align-items:center;gap:8px;margin-bottom:.4rem;flex-wrap:wrap}
+.ci-name{font-size:14px;font-weight:700;color:var(--ink);font-family:'Fraunces',serif}
+.ci-role{font-size:9px;background:var(--gold-light);color:var(--gold);padding:2px 7px;border-radius:99px;font-weight:700;text-transform:uppercase;font-family:'DM Mono',monospace;border:1px solid rgba(176,125,26,.2)}
+.ci-date{font-size:11px;color:var(--ink4);font-family:'DM Mono',monospace;margin-left:auto}
+.ci-text{font-size:15px;color:var(--ink2);line-height:1.6;font-style:italic}
+.ci-actions{display:flex;gap:8px;margin-top:.6rem}
+.ci-action{font-size:12px;color:var(--ink4);background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;padding:2px 0;transition:.15s}
+.ci-action:hover{color:var(--accent)}
+.ci-action.del{color:#e07070}
+.ci-action.del:hover{color:#c0392b}
+.no-comments{text-align:center;padding:2.5rem;color:var(--ink4);font-style:italic;background:var(--cream);border:1px dashed var(--border);border-radius:12px}
+
+/* ══════════════ WRITE / EDIT ══════════════ */
+.write-wrap{max-width:800px;margin:0 auto;padding:2.5rem 1.5rem}
+.write-header{margin-bottom:2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.write-header h2{font-size:30px;font-style:italic;color:var(--ink)}
+.btn-publish{padding:11px 26px;background:var(--accent);color:#fff;border-radius:9px;font-size:15px;font-weight:700;cursor:pointer;transition:.15s;font-family:'Fraunces',serif;border:none;letter-spacing:.2px}
+.btn-publish:hover{background:var(--accent2)}
+.btn-save-draft{padding:11px 20px;background:var(--cream2);color:var(--ink2);border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);font-family:'Fraunces',serif;transition:.15s}
+.btn-save-draft:hover{background:var(--cream3);border-color:var(--ink4)}
+.write-form{display:flex;flex-direction:column;gap:1.2rem}
+.fi-title{width:100%;padding:14px 16px;border:2px solid var(--border);border-radius:10px;font-size:22px;font-weight:700;color:var(--ink);background:var(--cream);transition:.15s;font-family:'Fraunces',serif;font-style:italic}
+.fi-title:focus{border-color:var(--accent);background:#fff}
+.fi-title::placeholder{color:var(--ink4);font-style:italic}
+.fi-body{width:100%;padding:16px;border:2px solid var(--border);border-radius:10px;font-size:16px;color:var(--ink2);background:var(--cream);min-height:320px;resize:vertical;transition:.15s;font-family:'Lora',serif;line-height:1.75}
+.fi-body:focus{border-color:var(--accent);background:#fff}
+.fi-body::placeholder{color:var(--ink4);font-style:italic}
+.write-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.write-char-count{font-size:12px;color:var(--ink4);text-align:right;font-family:'DM Mono',monospace;margin-top:-8px}
+.emoji-picker{display:flex;gap:8px;flex-wrap:wrap;padding:.75rem;background:var(--cream);border:1px solid var(--border);border-radius:8px}
+.emoji-picker span{font-size:22px;cursor:pointer;padding:4px;border-radius:6px;transition:.15s;border:2px solid transparent}
+.emoji-picker span:hover{border-color:var(--accent);background:var(--accent-light)}
+.emoji-picker span.sel{border-color:var(--accent);background:var(--accent-light)}
+.ep-label{font-size:11px;color:var(--ink4);font-family:'DM Mono',monospace;margin-bottom:.3rem;display:block;text-transform:uppercase;letter-spacing:.5px}
+
+/* ══════════════ PROFILE PAGE ══════════════ */
+.profile-wrap{max-width:900px;margin:0 auto;padding:2.5rem 1.5rem 5rem}
+.profile-banner{background:var(--ink);border-radius:18px;padding:2.5rem;display:flex;align-items:center;gap:24px;margin-bottom:2rem;flex-wrap:wrap;position:relative;overflow:hidden}
+.profile-banner::before{content:'';position:absolute;right:-40px;top:-40px;width:200px;height:200px;border-radius:50%;background:rgba(201,74,26,.15)}
+.profile-big-avatar{width:88px;height:88px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:700;font-family:'Fraunces',serif;flex-shrink:0;border:4px solid rgba(255,255,255,.2);position:relative}
+.profile-info h2{font-size:28px;color:#fff;font-style:italic;margin-bottom:4px}
+.profile-info p{font-size:14px;color:rgba(255,255,255,.6);font-family:'DM Mono',monospace}
+.profile-stats{margin-left:auto;display:flex;gap:24px;flex-wrap:wrap}
+.p-stat{text-align:center}
+.p-stat-val{font-size:28px;font-weight:700;color:#fff;font-family:'Fraunces',serif;font-style:italic}
+.p-stat-lab{font-size:11px;color:rgba(255,255,255,.5);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px}
+.profile-posts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.mini-post-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem;cursor:pointer;transition:.2s}
+.mini-post-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow)}
+.mpc-title{font-size:17px;font-weight:700;color:var(--ink);line-height:1.3;margin-bottom:.5rem;font-style:italic}
+.mpc-meta{font-size:12px;color:var(--ink4);font-family:'DM Mono',monospace;display:flex;gap:10px;flex-wrap:wrap}
+
+/* ══════════════ SEARCH ══════════════ */
+.search-bar-wrap{background:var(--ink);padding:2rem 1.5rem}
+.search-inner{max-width:700px;margin:0 auto;display:flex;gap:12px}
+.search-input{flex:1;padding:13px 18px;border-radius:10px;border:2px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);color:#fff;font-size:16px;font-family:'Fraunces',serif;font-style:italic;transition:.2s}
+.search-input:focus{border-color:var(--accent);background:rgba(255,255,255,.13);outline:none}
+.search-input::placeholder{color:rgba(255,255,255,.35);font-style:italic}
+.btn-search{padding:13px 22px;background:var(--accent);color:#fff;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Fraunces',serif;border:none;transition:.15s}
+.btn-search:hover{background:var(--accent2)}
+
+/* ══════════════ TOAST ══════════════ */
+.toast-box{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:8px;z-index:9999}
+.toast{background:var(--ink);color:#fff;border-radius:10px;padding:12px 18px;font-size:14px;font-family:'DM Mono',monospace;box-shadow:0 8px 28px rgba(0,0,0,.25);display:flex;align-items:center;gap:10px;max-width:320px;animation:toastIn .25s ease;border:1px solid rgba(255,255,255,.1)}
+.toast.success{border-left:3px solid #4caf8a}
+.toast.error{border-left:3px solid #e07070}
+.toast.info{border-left:3px solid var(--accent2)}
+@keyframes toastIn{from{transform:translateX(20px);opacity:0}to{transform:none;opacity:1}}
+
+/* ══════════════ UTILS ══════════════ */
+.empty-state{text-align:center;padding:4rem 1rem;color:var(--ink4)}
+.empty-state .icon{font-size:64px;margin-bottom:1rem;opacity:.5}
+.empty-state h3{font-size:22px;color:var(--ink3);margin-bottom:.5rem;font-style:italic}
+.empty-state p{font-size:14px}
+.section-divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:2rem 0}
+.btn-back{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;background:var(--cream2);color:var(--ink2);border:1px solid var(--border);cursor:pointer;font-family:'Fraunces',serif;transition:.15s;margin-bottom:1.5rem}
+.btn-back:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* ══════════════ FOOTER ══════════════ */
+footer{background:var(--ink);color:rgba(255,255,255,.4);padding:2.5rem 1.5rem;text-align:center;margin-top:auto;font-family:'DM Mono',monospace;font-size:13px}
+footer .fl-logo{font-family:'Fraunces',serif;font-size:28px;font-style:italic;color:rgba(255,255,255,.8);margin-bottom:.5rem;letter-spacing:-1px}
+footer .fl-logo span{color:var(--accent2)}
+
+/* ══════════════ RESPONSIVE ══════════════ */
+@media(max-width:900px){
+  .home-grid{grid-template-columns:1fr}
+  .sidebar{position:static}
+  .profile-stats{margin-left:0}
+  .profile-posts-grid{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .post-card{grid-template-columns:1fr}
+  .pc-thumb{width:100%;height:120px}
+  .write-row{grid-template-columns:1fr}
+  .nav-links{gap:2px}
+  .nav-btn{padding:6px 8px;font-size:12px}
+  .pd-title{font-size:28px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ AUTH SCREEN ══════════════ -->
+<div id="auth-screen" class="active">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <h1>Ink<span>well</span></h1>
+      <p>Where ideas find their voice</p>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Register</button>
+    </div>
+    <div id="auth-error" class="auth-error"></div>
+
+    <!-- Login -->
+    <div id="login-form">
+      <div class="fg"><label class="fl">Email</label><input class="fi" id="l-email" type="email" placeholder="you@email.com" value="admin@inkwell.com"></div>
+      <div class="fg"><label class="fl">Password</label><input class="fi" id="l-pass" type="password" placeholder="••••••••" value="admin123"></div>
+      <button class="btn-auth" onclick="doLogin()">Sign In →</button>
+      <div class="auth-hint">
+        Admin: <b>admin@inkwell.com / admin123</b><br>
+        Reader: <b>reader@inkwell.com / reader123</b><br>
+        <span style="color:#888">Or register a new account</span>
+      </div>
+    </div>
+
+    <!-- Register -->
+    <div id="register-form" style="display:none">
+      <div class="fg"><label class="fl">Full Name</label><input class="fi" id="r-name" type="text" placeholder="Jane Smith"></div>
+      <div class="fg"><label class="fl">Email</label><input class="fi" id="r-email" type="email" placeholder="you@email.com"></div>
+      <div class="fg"><label class="fl">Password</label><input class="fi" id="r-pass" type="password" placeholder="Create a password"></div>
+      <div class="fg"><label class="fl">Bio (optional)</label><input class="fi" id="r-bio" type="text" placeholder="Writer, thinker, coffee enthusiast…"></div>
+      <button class="btn-auth" onclick="doRegister()">Create Account →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MAIN APP ══════════════ -->
+<div id="app">
+  <!-- NAVBAR -->
+  <nav id="navbar">
+    <div class="nav-wrap">
+      <div class="nav-logo" onclick="goPage('home')">Ink<span>well</span></div>
+      <div class="nav-links">
+        <button class="nav-btn" onclick="goPage('home')">Home</button>
+        <button class="nav-btn" onclick="goPage('explore')">Explore</button>
+        <button class="nav-btn write" onclick="goPage('write')">✦ Write</button>
+        <button class="nav-btn" onclick="goPage('profile')">Profile</button>
+        <button class="nav-btn admin-only" onclick="goPage('admin')" style="display:none;color:#ffd080">Admin</button>
+      </div>
+      <div class="nav-user" onclick="doLogout()">
+        <div class="nav-avatar" id="nav-avatar">?</div>
+        <div>
+          <div class="nav-uname" id="nav-name">User</div>
+          <div class="nav-role-badge" id="nav-role">READER</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HOME PAGE -->
+  <div class="page active" id="page-home">
+    <div class="hero">
+      <div class="hero-inner wrap">
+        <div class="hero-tag">✦ The modern blogging platform</div>
+        <h1>Stories that<br>matter. <em>Ideas</em><br>that resonate.</h1>
+        <p>Publish your thoughts, discover great writing, and join conversations that matter.</p>
+        <div class="hero-actions">
+          <button class="btn-hero btn-primary" onclick="goPage('write')">Start Writing</button>
+          <button class="btn-hero btn-ghost" onclick="goPage('explore')">Explore Posts</button>
+        </div>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="home-grid">
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
+            <h2 style="font-size:24px;font-style:italic;color:var(--ink)">Latest Stories</h2>
+            <div id="home-cat-filter" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+          </div>
+          <div id="posts-feed" class="posts-feed"></div>
+        </div>
+        <div class="sidebar">
+          <div class="sidebar-widget">
+            <div class="sw-head">Browse Topics</div>
+            <div class="sw-body"><div class="tag-cloud" id="tag-cloud"></div></div>
+          </div>
+          <div class="sidebar-widget">
+            <div class="sw-head">Top Authors</div>
+            <div class="sw-body" id="top-authors"></div>
+          </div>
+          <div class="sidebar-widget" style="background:var(--ink);border-color:var(--ink)">
+            <div class="sw-body" style="padding:1.5rem;text-align:center">
+              <div style="font-size:24px;margin-bottom:.5rem">✦</div>
+              <div style="font-family:'Fraunces',serif;font-size:18px;color:#fff;font-style:italic;margin-bottom:.5rem">Share Your Story</div>
+              <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:1rem;font-family:'DM Mono',monospace">Every great writer started somewhere.</div>
+              <button class="btn-hero btn-primary" style="font-size:13px;padding:10px 20px;width:100%" onclick="goPage('write')">Write Now</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPLORE PAGE -->
+  <div class="page" id="page-explore">
+    <div class="search-bar-wrap">
+      <div class="search-inner">
+        <input class="search-input" id="search-input" placeholder="Search for stories, topics, writers…" oninput="renderExplore()">
+        <button class="btn-search" onclick="renderExplore()">Search</button>
+      </div>
+    </div>
+    <div class="wrap" style="padding-top:2rem;padding-bottom:4rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:12px">
+        <h2 style="font-size:24px;font-style:italic">All Stories</h2>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <select class="fi" style="width:auto;padding:8px 12px;font-size:13px" id="sort-select" onchange="renderExplore()">
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="popular">Most Liked</option>
+            <option value="comments">Most Comments</option>
+          </select>
+        </div>
+      </div>
+      <div id="explore-cat-pills" style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:1.5rem"></div>
+      <div id="explore-grid" class="posts-feed"></div>
+    </div>
+  </div>
+
+  <!-- POST DETAIL PAGE -->
+  <div class="page" id="page-post">
+    <div class="post-detail-wrap" id="post-detail-content"></div>
+  </div>
+
+  <!-- WRITE PAGE -->
+  <div class="page" id="page-write">
+    <div class="write-wrap">
+      <div class="write-header">
+        <h2>New Story</h2>
+        <div style="display:flex;gap:8px">
+          <button class="btn-save-draft" onclick="saveDraft()">Save Draft</button>
+          <button class="btn-publish" onclick="publishPost()">Publish →</button>
+        </div>
+      </div>
+      <div class="write-form">
+        <input type="hidden" id="edit-post-id">
+        <div class="fg"><label class="fl">Title *</label><input class="fi fi-title" id="w-title" placeholder="Your story begins with a title…"></div>
+        <div class="fg">
+          <label class="fl">Cover Emoji</label>
+          <div class="ep-label">Pick an icon for your post</div>
+          <div class="emoji-picker" id="emoji-picker"></div>
+          <input type="hidden" id="w-emoji" value="📝">
+        </div>
+        <div class="write-row">
+          <div class="fg"><label class="fl">Category</label>
+            <select class="fi" id="w-cat">
+              <option value="Technology">Technology</option>
+              <option value="Design">Design</option>
+              <option value="Life">Life</option>
+              <option value="Culture">Culture</option>
+              <option value="Science">Science</option>
+              <option value="Travel">Travel</option>
+              <option value="Health">Health</option>
+              <option value="Business">Business</option>
+              <option value="Opinion">Opinion</option>
+            </select>
+          </div>
+          <div class="fg"><label class="fl">Tags (comma-separated)</label><input class="fi" id="w-tags" placeholder="writing, creativity, inspiration"></div>
+        </div>
+        <div class="fg">
+          <label class="fl">Your Story *</label>
+          <textarea class="fi fi-body" id="w-body" placeholder="Start writing your story here…&#10;&#10;You can use paragraph breaks to structure your content." oninput="updateWordCount()"></textarea>
+          <div class="write-char-count" id="word-count">0 words</div>
+        </div>
+        <div class="fg"><label class="fl">Excerpt (optional)</label><input class="fi" id="w-excerpt" placeholder="A short teaser for your story (auto-generated if empty)"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE PAGE -->
+  <div class="page" id="page-profile">
+    <div class="profile-wrap" id="profile-content"></div>
+  </div>
+
+  <!-- ADMIN PAGE -->
+  <div class="page" id="page-admin">
+    <div class="wrap" style="padding-top:2rem;padding-bottom:4rem">
+      <h2 style="font-size:30px;font-style:italic;margin-bottom:1.5rem">Admin Dashboard</h2>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:2rem" id="admin-stats"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px" class="admin-grids">
+        <div>
+          <h3 style="font-size:20px;font-style:italic;margin-bottom:1rem">All Posts</h3>
+          <div id="admin-posts"></div>
+        </div>
+        <div>
+          <h3 style="font-size:20px;font-style:italic;margin-bottom:1rem">All Users</h3>
+          <div id="admin-users"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="fl-logo">Ink<span>well</span></div>
+    <p>© 2026 Inkwell. Built for writers, by writers.</p>
+  </footer>
+</div>
+
+<!-- TOAST -->
+<div class="toast-box" id="toast-box"></div>
+
+<script>
+/* ═══════════════════════════════════════
+   DATABASE  (localStorage)
+═══════════════════════════════════════ */
+const DB = {
+  get(k){try{return JSON.parse(localStorage.getItem('iw_'+k)||'null')}catch{return null}},
+  set(k,v){try{localStorage.setItem('iw_'+k,JSON.stringify(v))}catch{}},
+};
+
+const AVATAR_COLORS = ['#c94a1a','#0f6b6b','#b07d1a','#6b3a8c','#1a5fa0','#4a8c3a','#8c1a4a'];
+const EMOJIS = ['📝','✍️','💡','🌍','🚀','🎨','📚','🔬','🌿','☕','🎭','💻','🏔️','🌊','🦋','🔮','⚡','🌙'];
+
+function initDB(){
+  if(!DB.get('users')) DB.set('users',[
+    {id:'u1',name:'Admin User',email:'admin@inkwell.com',pass:'admin123',role:'admin',bio:'Platform administrator and avid reader.',joined:new Date().toISOString(),color:'#c94a1a'},
+    {id:'u2',name:'Jane Reader',email:'reader@inkwell.com',pass:'reader123',role:'reader',bio:'Curious mind exploring the world through words.',joined:new Date().toISOString(),color:'#0f6b6b'},
+  ]);
+  if(!DB.get('posts')) DB.set('posts',[
+    {id:'p1',title:'The Art of Slow Thinking in a Fast World',excerpt:'In an age of instant gratification, the most radical act is to pause and truly reflect.',body:'In an age of instant gratification, the most radical act is to pause and truly reflect on what we really know versus what we merely assume.\n\nWe live in a world that rewards speed. Quick replies, rapid decisions, first-to-publish wins. But there is a cost to this acceleration that we rarely stop to calculate, ironically, because we are too busy moving fast.\n\nThe philosopher William James once noted that the great thing in all education is to make our nervous system our ally instead of our enemy. What he meant, in modern terms, is this: build habits that allow you to slow down deliberately, so that you can speed up meaningfully.\n\n## The Case for Deliberate Slowness\n\nWhen we slow down our thinking, we create space for genuine insight. We notice patterns that rapid processing misses. We allow disparate ideas to collide in unexpected ways, and those collisions are where creativity lives.\n\nThe next time you face a complex problem, resist the urge to immediately act. Sit with the discomfort of not-knowing for a little longer than feels natural. You might be surprised by what emerges.',cat:'Life',tags:['thinking','philosophy','mindfulness'],emoji:'🌙',authorId:'u1',date:'2026-04-15T09:00:00Z',likes:['u2'],views:342,status:'published'},
+    {id:'p2',title:'Why Design Systems Fail (And How to Fix Them)',excerpt:'Most design systems die not from poor design but from poor politics. Here\'s the truth no one talks about.',body:'Most design systems die not from poor design but from poor politics. Here is the truth no one talks about in the design community.\n\nA design system is, at its core, a social contract. It is an agreement between designers, developers, and stakeholders to speak a common language. And like all social contracts, it fails when the parties stop finding value in it.\n\n## The Three Killers\n\nFirst, the adoption problem: teams built the system for themselves, not for the teams who need to use it. Second, the maintenance gap: no one owns it, so no one updates it. Third, the documentation desert: beautiful components with zero explanation of when and why to use them.\n\nThe fix? Treat your design system like a product — with a roadmap, a team, office hours, and a feedback loop. Make it delightful to contribute to. Celebrate contributors publicly. Make the system the path of least resistance, and adoption follows.',cat:'Design',tags:['design','systems','UX'],emoji:'🎨',authorId:'u1',date:'2026-04-20T14:00:00Z',likes:['u2'],views:518,status:'published'},
+    {id:'p3',title:'I Read 52 Books in a Year. Here\'s What Changed.',excerpt:'Reading a book a week transformed how I think. But not in the ways I expected.',body:'Reading a book a week transformed how I think. But not in the ways I expected.\n\nI started the year-long reading challenge as a productivity hack. I wanted to absorb more information, become smarter, be more interesting at dinner parties. What I discovered was something far stranger and more valuable.\n\n## Books Don\'t Give Answers. They Give Better Questions.\n\nAfter 52 books, I don\'t feel like I know more. I feel like I finally understand how little I know — and why that is an extraordinarily good thing.\n\nThe books that changed me most were not the ones that confirmed what I already believed. They were the ones that made me deeply uncomfortable. The ones where I found myself disagreeing loudly in my head, only to realize, 200 pages later, that the author had quietly dismantled an assumption I didn\'t even know I was making.\n\nIf you want to start reading more, here is the only advice you need: read what genuinely interests you. Not what you think you should read. The moment reading becomes homework, you\'ve already lost.',cat:'Life',tags:['books','reading','self-improvement'],emoji:'📚',authorId:'u2',date:'2026-04-28T10:30:00Z',likes:['u1'],views:892,status:'published'},
+    {id:'p4',title:'The Quiet Revolution of Local-First Software',excerpt:'What if your apps worked perfectly without the internet? A new movement thinks they should.',body:'What if your apps worked perfectly without the internet? A new movement in software development thinks they should — and it\'s starting to gain real momentum.\n\nLocal-first software is a design philosophy that prioritizes keeping your data on your own device, syncing to the cloud when available rather than depending on it. The result? Apps that are faster, more private, and that actually work on a plane.\n\n## Why It Matters Now\n\nWe\'ve spent a decade migrating everything to "the cloud" — and we\'ve gained collaboration and accessibility, but lost control, privacy, and reliability. The local-first movement is a thoughtful correction, not a rejection of connectivity.\n\nTools like Obsidian, Linear, and Figma have shown that you can have both: rich collaboration when connected, and full functionality when offline. The future of software might be more local than we think.',cat:'Technology',tags:['software','tech','local-first'],emoji:'💻',authorId:'u1',date:'2026-05-01T08:00:00Z',likes:[],views:267,status:'published'},
+  ]);
+  if(!DB.get('comments')) DB.set('comments',[
+    {id:'c1',postId:'p1',authorId:'u2',text:'This really resonated with me. I\'ve been trying to practice what some call "deliberate thinking" — scheduling time specifically to think without any input or stimulation. It\'s harder than it sounds!',date:'2026-04-16T11:00:00Z'},
+    {id:'c2',postId:'p1',authorId:'u1',text:'Great point about William James. I think there\'s also something to be said about how journaling can be a form of structured slow thinking — you\'re forced to articulate and examine thoughts rather than just letting them pass.',date:'2026-04-17T09:30:00Z'},
+    {id:'c3',postId:'p2',authorId:'u2',text:'The "social contract" framing is spot on. We had a design system at my last job that was technically excellent but completely abandoned because the team who built it never talked to the teams using it. Politics, exactly.',date:'2026-04-21T16:00:00Z'},
+    {id:'c4',postId:'p3',authorId:'u1',text:'52 books is incredible. I\'m at about 20 for the year and already feeling the shift you describe — less certainty, more curiosity. It\'s disorienting in the best way.',date:'2026-04-29T13:00:00Z'},
+  ]);
+  if(!DB.get('drafts')) DB.set('drafts',[]);
+}
+initDB();
+
+/* ═══════════════════════════════════════
+   STATE
+═══════════════════════════════════════ */
+let currentUser = null;
+let currentPage = 'home';
+let currentPostId = null;
+let selectedCat = '';
+let selectedEplorecat = '';
+let selectedEmoji = '📝';
+let editingPostId = null;
+
+/* ═══════════════════════════════════════
+   AUTH
+═══════════════════════════════════════ */
+function switchAuthTab(t){
+  ['login','register'].forEach(tab=>{
+    document.getElementById('tab-'+tab).classList.toggle('active',tab===t);
+    document.getElementById(tab+'-form').style.display = tab===t ? 'block':'none';
+  });
+  document.getElementById('auth-error').style.display='none';
+  fixTabStyles();
+}
+function fixTabStyles(){
+  document.querySelectorAll('.auth-tab').forEach(el=>{el.style.color='#444';el.style.fontWeight='600'});
+  const a=document.querySelector('.auth-tab.active');
+  if(a){a.style.color='#1a1612';a.style.fontWeight='700'}
+}
+function showAuthErr(msg){const e=document.getElementById('auth-error');e.textContent=msg;e.style.display='block'}
+function doLogin(){
+  const email=document.getElementById('l-email').value.trim();
+  const pass=document.getElementById('l-pass').value;
+  const u=(DB.get('users')||[]).find(u=>u.email===email&&u.pass===pass);
+  if(!u)return showAuthErr('Invalid email or password.');
+  currentUser=u;startApp();
+}
+function doRegister(){
+  const name=document.getElementById('r-name').value.trim();
+  const email=document.getElementById('r-email').value.trim();
+  const pass=document.getElementById('r-pass').value;
+  const bio=document.getElementById('r-bio').value.trim();
+  if(!name||!email||!pass)return showAuthErr('Name, email and password are required.');
+  const users=DB.get('users')||[];
+  if(users.find(u=>u.email===email))return showAuthErr('Email already registered.');
+  const color=AVATAR_COLORS[users.length%AVATAR_COLORS.length];
+  const u={id:'u'+Date.now(),name,email,pass,bio:bio||'A new voice on Inkwell.',role:'reader',joined:new Date().toISOString(),color};
+  users.push(u);DB.set('users',users);
+  currentUser=u;startApp();
+}
+function doLogout(){
+  if(!confirm('Sign out of Inkwell?'))return;
+  currentUser=null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('app').classList.remove('active');
+  document.getElementById('auth-screen').classList.add('active');
+}
+function startApp(){
+  document.getElementById('auth-screen').classList.remove('active');
+  const appEl=document.getElementById('app');
+  appEl.style.display='flex';appEl.classList.add('active');
+  const ini=currentUser.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('nav-avatar').textContent=ini;
+  document.getElementById('nav-avatar').style.background=currentUser.color||'#c94a1a';
+  document.getElementById('nav-name').textContent=currentUser.name.split(' ')[0];
+  document.getElementById('nav-role').textContent=currentUser.role.toUpperCase();
+  document.querySelectorAll('.admin-only').forEach(el=>el.style.display=currentUser.role==='admin'?'':'none');
+  initEmojiPicker();
+  goPage('home');
+}
+
+/* ═══════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════ */
+function goPage(pg,extra){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+pg).classList.add('active');
+  currentPage=pg;window.scrollTo(0,0);
+  if(pg==='home'){selectedCat='';renderHome()}
+  if(pg==='explore'){renderExplore()}
+  if(pg==='post'&&extra){currentPostId=extra;renderPostDetail(extra)}
+  if(pg==='write'){setupWritePage(extra)}
+  if(pg==='profile'){renderProfile()}
+  if(pg==='admin'){renderAdmin()}
+}
+
+/* ═══════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════ */
+function getUser(id){return (DB.get('users')||[]).find(u=>u.id===id)||{name:'Unknown',color:'#999',id:'?'}}
+function timeAgo(dateStr){
+  const d=new Date(dateStr),now=new Date();
+  const diff=Math.floor((now-d)/1000);
+  if(diff<60)return 'just now';
+  if(diff<3600)return Math.floor(diff/60)+'m ago';
+  if(diff<86400)return Math.floor(diff/3600)+'h ago';
+  if(diff<2592000)return Math.floor(diff/86400)+'d ago';
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+function readTime(text){return Math.max(1,Math.ceil(text.split(/\s+/).length/200))+' min read'}
+function avatarEl(user,size=28,fontSize=11){
+  const ini=(user.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${user.color||'#999'};color:#fff;display:flex;align-items:center;justify-content:center;font-size:${fontSize}px;font-weight:700;font-family:'Fraunces',serif;flex-shrink:0">${ini}</div>`;
+}
+function getAllTags(){
+  const posts=DB.get('posts')||[];
+  const tags={};
+  posts.filter(p=>p.status==='published').forEach(p=>(p.tags||[]).forEach(t=>{tags[t]=(tags[t]||0)+1}));
+  return Object.entries(tags).sort((a,b)=>b[1]-a[1]).slice(0,16);
+}
+function getCategories(){
+  return [...new Set((DB.get('posts')||[]).filter(p=>p.status==='published').map(p=>p.cat))];
+}
+function postCommentCount(pid){return (DB.get('comments')||[]).filter(c=>c.postId===pid).length}
+
+/* ═══════════════════════════════════════
+   HOME
+═══════════════════════════════════════ */
+function renderHome(){
+  const posts=(DB.get('posts')||[]).filter(p=>p.status==='published').sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const cats=getCategories();
+
+  // Cat filter
+  const filterEl=document.getElementById('home-cat-filter');
+  filterEl.innerHTML='<button class="tag-pill'+(selectedCat===''?' active':'')+'" onclick="homeSetCat(\'\')">All</button>'
+    +cats.map(c=>`<button class="tag-pill${selectedCat===c?' active':''}" onclick="homeSetCat('${c}')">${c}</button>`).join('');
+
+  const filtered=selectedCat?posts.filter(p=>p.cat===selectedCat):posts;
+  document.getElementById('posts-feed').innerHTML=filtered.length
+    ?filtered.map(p=>postCardHTML(p)).join('')
+    :'<div class="empty-state"><div class="icon">📭</div><h3>No stories yet</h3><p>Be the first to write something!</p></div>';
+
+  // Tags sidebar
+  document.getElementById('tag-cloud').innerHTML=getAllTags().map(([t,c])=>`<span class="tag-pill" onclick="homeSetCat('${t}')">${t} <span style="opacity:.5">${c}</span></span>`).join('');
+
+  // Top authors
+  const users=DB.get('users')||[];
+  const topAuthors=users.map(u=>({...u,count:posts.filter(p=>p.authorId===u.id).length})).sort((a,b)=>b.count-a.count).slice(0,4);
+  document.getElementById('top-authors').innerHTML=topAuthors.map(u=>`
+    <div class="top-author">
+      ${avatarEl(u,36,13)}
+      <div>
+        <div class="ta-name">${u.name}</div>
+        <div class="ta-posts">${u.count} post${u.count!==1?'s':''}</div>
+      </div>
+      <span class="ta-count">${u.count}</span>
+    </div>`).join('');
+}
+function homeSetCat(c){selectedCat=c;renderHome()}
+
+/* ═══════════════════════════════════════
+   POST CARD HTML
+═══════════════════════════════════════ */
+function postCardHTML(p){
+  const author=getUser(p.authorId);
+  return `<div class="post-card" onclick="goPage('post','${p.id}')">
+    <div>
+      <div class="pc-meta-top">
+        <span class="pc-cat">${p.cat}</span>
+        <span class="pc-dot"></span>
+        <span class="pc-read">${readTime(p.body)}</span>
+      </div>
+      <div class="pc-title">${p.title}</div>
+      <div class="pc-excerpt">${p.excerpt||p.body.slice(0,160)+'…'}</div>
+      <div class="pc-footer">
+        ${avatarEl(author,28,11)}
+        <span class="pc-author-name">${author.name}</span>
+        <span class="pc-date">${timeAgo(p.date)}</span>
+        <div class="pc-stats">
+          <span>♡ ${(p.likes||[]).length}</span>
+          <span>💬 ${postCommentCount(p.id)}</span>
+          <span>👁 ${p.views||0}</span>
+        </div>
+      </div>
+    </div>
+    <div class="pc-thumb">${p.emoji||'📝'}</div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════
+   EXPLORE
+═══════════════════════════════════════ */
+function renderExplore(){
+  const search=(document.getElementById('search-input')?.value||'').toLowerCase();
+  const sort=document.getElementById('sort-select')?.value||'newest';
+  let posts=(DB.get('posts')||[]).filter(p=>p.status==='published');
+
+  // Category pills
+  const cats=getCategories();
+  document.getElementById('explore-cat-pills').innerHTML=
+    `<button class="tag-pill${selectedEplorecat===''?' active':''}" onclick="setExploreCat('')">All</button>`
+    +cats.map(c=>`<button class="tag-pill${selectedEplorecat===c?' active':''}" onclick="setExploreCat('${c}')">${c}</button>`).join('');
+
+  if(selectedEplorecat) posts=posts.filter(p=>p.cat===selectedEplorecat);
+  if(search) posts=posts.filter(p=>p.title.toLowerCase().includes(search)||p.body.toLowerCase().includes(search)||(p.tags||[]).some(t=>t.toLowerCase().includes(search))||p.cat.toLowerCase().includes(search));
+
+  if(sort==='newest') posts.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  else if(sort==='oldest') posts.sort((a,b)=>new Date(a.date)-new Date(b.date));
+  else if(sort==='popular') posts.sort((a,b)=>(b.likes||[]).length-(a.likes||[]).length);
+  else if(sort==='comments') posts.sort((a,b)=>postCommentCount(b.id)-postCommentCount(a.id));
+
+  document.getElementById('explore-grid').innerHTML=posts.length
+    ?posts.map(p=>postCardHTML(p)).join('')
+    :'<div class="empty-state"><div class="icon">🔍</div><h3>No results found</h3><p>Try a different search or category.</p></div>';
+}
+function setExploreCat(c){selectedEplorecat=c;renderExplore()}
+
+/* ═══════════════════════════════════════
+   POST DETAIL
+═══════════════════════════════════════ */
+function renderPostDetail(pid){
+  const posts=DB.get('posts')||[];
+  const p=posts.find(x=>x.id===pid);
+  if(!p){document.getElementById('post-detail-content').innerHTML='<p>Post not found.</p>';return}
+
+  // Increment views
+  p.views=(p.views||0)+1;DB.set('posts',posts);
+
+  const author=getUser(p.authorId);
+  const isAuthor=currentUser&&(currentUser.id===p.authorId||currentUser.role==='admin');
+  const isLiked=currentUser&&(p.likes||[]).includes(currentUser.id);
+  const comments=(DB.get('comments')||[]).filter(c=>c.postId===pid).sort((a,b)=>new Date(a.date)-new Date(b.date));
+
+  const bodyHTML=p.body.split('\n\n').map(para=>{
+    if(para.startsWith('## '))return `<h2>${para.slice(3)}</h2>`;
+    if(para.startsWith('> '))return `<blockquote>${para.slice(2)}</blockquote>`;
+    if(para.trim())return `<p>${para}</p>`;
+    return '';
+  }).join('');
+
+  document.getElementById('post-detail-content').innerHTML=`
+    <button class="btn-back" onclick="history.back()||goPage('home')">← Back</button>
+    <div class="pd-breadcrumb">
+      <span onclick="goPage('home')">Home</span> ›
+      <span onclick="goPage('explore')">${p.cat}</span> ›
+      <span>${p.title.slice(0,30)}…</span>
+    </div>
+    <div class="pd-cat">${p.emoji||'📝'} ${p.cat}</div>
+    <h1 class="pd-title">${p.title}</h1>
+    <div class="pd-meta">
+      ${avatarEl(author,42,16)}
+      <div>
+        <div class="pd-author-name">${author.name}</div>
+        <div class="pd-meta-sub">${new Date(p.date).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})} · ${readTime(p.body)} · ${p.views||0} views</div>
+      </div>
+      ${isAuthor?`<div class="pd-actions">
+        <button class="pd-action-btn btn-edit-post" onclick="goPage('write','${p.id}')">✎ Edit</button>
+        <button class="pd-action-btn btn-del-post" onclick="deletePost('${p.id}')">🗑 Delete</button>
+      </div>`:''}
+    </div>
+    <div class="pd-body">${bodyHTML}</div>
+    <div class="pd-tags">${(p.tags||[]).map(t=>`<span class="tag-pill">#${t}</span>`).join('')}</div>
+    <div class="pd-like-bar">
+      <button class="btn-like${isLiked?' liked':''}" onclick="toggleLike('${p.id}')">
+        ${isLiked?'♥':'♡'} ${isLiked?'Liked':'Like'}
+      </button>
+      <span class="like-count">${(p.likes||[]).length} like${(p.likes||[]).length!==1?'s':''}</span>
+      <button class="share-btn" onclick="copyLink()">Share ↗</button>
+    </div>
+
+    <div class="comments-section">
+      <div class="cs-title">Comments <span style="font-family:'DM Mono',monospace;font-size:18px;color:var(--ink4)">(${comments.length})</span></div>
+      <div class="comment-form">
+        <h4>Join the conversation</h4>
+        <textarea class="fi-comment" id="comment-text" placeholder="What's on your mind?"></textarea>
+        <button class="btn-comment" onclick="postComment('${p.id}')">Post Comment →</button>
+      </div>
+      <div class="comment-list" id="comment-list">
+        ${comments.length?comments.map(c=>commentHTML(c)).join('')
+          :'<div class="no-comments">No comments yet. Start the conversation! 💬</div>'}
+      </div>
+    </div>`;
+}
+function commentHTML(c){
+  const author=getUser(c.authorId);
+  const canDel=currentUser&&(currentUser.id===c.authorId||currentUser.role==='admin');
+  return `<div class="comment-item" id="ci-${c.id}">
+    ${avatarEl(author,38,14)}
+    <div class="ci-body">
+      <div class="ci-header">
+        <span class="ci-name">${author.name}</span>
+        ${author.role==='admin'?'<span class="ci-role">Admin</span>':''}
+        <span class="ci-date">${timeAgo(c.date)}</span>
+      </div>
+      <div class="ci-text">${c.text}</div>
+      <div class="ci-actions">
+        ${canDel?`<button class="ci-action del" onclick="deleteComment('${c.id}')">Delete</button>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+function postComment(pid){
+  if(!currentUser)return toast('Sign in to comment','error');
+  const text=document.getElementById('comment-text').value.trim();
+  if(!text)return toast('Write something first!','error');
+  const comments=DB.get('comments')||[];
+  const c={id:'c'+Date.now(),postId:pid,authorId:currentUser.id,text,date:new Date().toISOString()};
+  comments.push(c);DB.set('comments',comments);
+  document.getElementById('comment-text').value='';
+  const cl=document.getElementById('comment-list');
+  if(cl.querySelector('.no-comments'))cl.innerHTML='';
+  const div=document.createElement('div');div.innerHTML=commentHTML(c);cl.appendChild(div.firstChild);
+  // Update comment count
+  const title=cl.closest('.post-detail-wrap').querySelector('.cs-title');
+  if(title){const allC=(DB.get('comments')||[]).filter(x=>x.postId===pid);title.innerHTML=`Comments <span style="font-family:'DM Mono',monospace;font-size:18px;color:var(--ink4)">(${allC.length})</span>`}
+  toast('Comment posted!','success');
+}
+function deleteComment(cid){
+  if(!confirm('Delete this comment?'))return;
+  DB.set('comments',(DB.get('comments')||[]).filter(c=>c.id!==cid));
+  const el=document.getElementById('ci-'+cid);if(el)el.remove();
+  toast('Comment deleted.','info');
+}
+function toggleLike(pid){
+  if(!currentUser)return toast('Sign in to like','error');
+  const posts=DB.get('posts')||[];
+  const p=posts.find(x=>x.id===pid);if(!p)return;
+  p.likes=p.likes||[];
+  const idx=p.likes.indexOf(currentUser.id);
+  if(idx>-1)p.likes.splice(idx,1);else p.likes.push(currentUser.id);
+  DB.set('posts',posts);
+  // Re-render like bar
+  const liked=p.likes.includes(currentUser.id);
+  const btn=document.querySelector('.btn-like');
+  if(btn){btn.className='btn-like'+(liked?' liked':'');btn.innerHTML=(liked?'♥ Liked':'♡ Like')}
+  const lc=document.querySelector('.like-count');
+  if(lc)lc.textContent=`${p.likes.length} like${p.likes.length!==1?'s':''}`;
+  toast(liked?'Post liked! ♥':'Like removed','info');
+}
+function deletePost(pid){
+  if(!confirm('Delete this post? This cannot be undone.'))return;
+  DB.set('posts',(DB.get('posts')||[]).filter(p=>p.id!==pid));
+  DB.set('comments',(DB.get('comments')||[]).filter(c=>c.postId!==pid));
+  toast('Post deleted.','info');
+  goPage('home');
+}
+function copyLink(){
+  navigator.clipboard?.writeText(window.location.href).then(()=>toast('Link copied!','success')).catch(()=>toast('Inkwell · '+document.title,'info'));
+}
+
+/* ═══════════════════════════════════════
+   WRITE / EDIT
+═══════════════════════════════════════ */
+function initEmojiPicker(){
+  const ep=document.getElementById('emoji-picker');
+  if(!ep)return;
+  ep.innerHTML=EMOJIS.map(e=>`<span${e===selectedEmoji?' class="sel"':''} onclick="selectEmoji('${e}')">${e}</span>`).join('');
+}
+function selectEmoji(e){
+  selectedEmoji=e;document.getElementById('w-emoji').value=e;
+  document.querySelectorAll('.emoji-picker span').forEach(s=>s.classList.toggle('sel',s.textContent===e));
+}
+function updateWordCount(){
+  const txt=document.getElementById('w-body').value;
+  const words=txt.trim()?txt.trim().split(/\s+/).length:0;
+  document.getElementById('word-count').textContent=words+' word'+(words!==1?'s':'');
+}
+function setupWritePage(postId){
+  editingPostId=postId||null;
+  const wh=document.querySelector('.write-header h2');
+  if(wh)wh.textContent=postId?'Edit Story':'New Story';
+  if(postId){
+    const p=(DB.get('posts')||[]).find(x=>x.id===postId);
+    if(p){
+      document.getElementById('w-title').value=p.title;
+      document.getElementById('w-body').value=p.body;
+      document.getElementById('w-excerpt').value=p.excerpt||'';
+      document.getElementById('w-cat').value=p.cat;
+      document.getElementById('w-tags').value=(p.tags||[]).join(', ');
+      selectedEmoji=p.emoji||'📝';
+      document.getElementById('w-emoji').value=selectedEmoji;
+      initEmojiPicker();
+      updateWordCount();
+    }
+  }else{
+    ['w-title','w-body','w-excerpt','w-tags'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+    document.getElementById('w-cat').value='Technology';
+    selectedEmoji='📝';document.getElementById('w-emoji').value='📝';
+    initEmojiPicker();
+    document.getElementById('word-count').textContent='0 words';
+  }
+}
+function buildPost(status){
+  const title=document.getElementById('w-title').value.trim();
+  const body=document.getElementById('w-body').value.trim();
+  const cat=document.getElementById('w-cat').value;
+  const tags=document.getElementById('w-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const excerpt=document.getElementById('w-excerpt').value.trim();
+  const emoji=document.getElementById('w-emoji').value||'📝';
+  if(!title||!body)return null;
+  return{title,body,cat,tags,excerpt:excerpt||body.slice(0,140)+'…',emoji,status,authorId:currentUser.id,date:new Date().toISOString(),likes:[],views:0};
+}
+function publishPost(){
+  const data=buildPost('published');
+  if(!data)return toast('Title and body are required!','error');
+  const posts=DB.get('posts')||[];
+  if(editingPostId){
+    const idx=posts.findIndex(p=>p.id===editingPostId);
+    posts[idx]={...posts[idx],...data,date:posts[idx].date};
+    DB.set('posts',posts);toast('Post updated!','success');
+    goPage('post',editingPostId);
+  }else{
+    const p={id:'p'+Date.now(),...data};
+    posts.unshift(p);DB.set('posts',posts);
+    toast('Post published! 🎉','success');
+    goPage('post',p.id);
+  }
+}
+function saveDraft(){
+  const data=buildPost('draft');
+  if(!data)return toast('Add a title and some content first.','error');
+  const posts=DB.get('posts')||[];
+  if(editingPostId){
+    const idx=posts.findIndex(p=>p.id===editingPostId);
+    posts[idx]={...posts[idx],...data};DB.set('posts',posts);
+  }else{
+    posts.unshift({id:'p'+Date.now(),...data});DB.set('posts',posts);
+  }
+  toast('Draft saved.','info');
+}
+
+/* ═══════════════════════════════════════
+   PROFILE
+═══════════════════════════════════════ */
+function renderProfile(){
+  const el=document.getElementById('profile-content');
+  const u=currentUser;
+  const posts=(DB.get('posts')||[]).filter(p=>p.authorId===u.id);
+  const published=posts.filter(p=>p.status==='published');
+  const drafts=posts.filter(p=>p.status==='draft');
+  const totalLikes=published.reduce((s,p)=>(s+(p.likes||[]).length),0);
+  const totalViews=published.reduce((s,p)=>(s+(p.views||0)),0);
+  const comments=(DB.get('comments')||[]).filter(c=>c.authorId===u.id);
+
+  el.innerHTML=`
+    <div class="profile-banner">
+      <div class="profile-big-avatar" style="background:${u.color||'#c94a1a'}">${u.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)}</div>
+      <div class="profile-info">
+        <h2>${u.name}</h2>
+        <p>${u.bio||'A writer on Inkwell'}</p>
+        <p style="margin-top:4px">${u.email} · Joined ${new Date(u.joined).toLocaleDateString('en-US',{month:'long',year:'numeric'})}</p>
+      </div>
+      <div class="profile-stats">
+        <div class="p-stat"><div class="p-stat-val">${published.length}</div><div class="p-stat-lab">Posts</div></div>
+        <div class="p-stat"><div class="p-stat-val">${totalLikes}</div><div class="p-stat-lab">Likes</div></div>
+        <div class="p-stat"><div class="p-stat-val">${totalViews}</div><div class="p-stat-lab">Views</div></div>
+        <div class="p-stat"><div class="p-stat-val">${comments.length}</div><div class="p-stat-lab">Comments</div></div>
+      </div>
+    </div>
+
+    <h3 style="font-size:22px;font-style:italic;margin-bottom:1rem">My Published Stories</h3>
+    ${published.length?`<div class="profile-posts-grid">${published.map(p=>`
+      <div class="mini-post-card" onclick="goPage('post','${p.id}')">
+        <div style="font-size:32px;margin-bottom:.5rem">${p.emoji||'📝'}</div>
+        <div class="mpc-title">${p.title}</div>
+        <div class="mpc-meta">
+          <span>♡ ${(p.likes||[]).length}</span>
+          <span>💬 ${postCommentCount(p.id)}</span>
+          <span>👁 ${p.views||0}</span>
+          <span>${timeAgo(p.date)}</span>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:.5rem">
+          <button class="pd-action-btn btn-edit-post" style="font-size:11px;padding:4px 10px" onclick="event.stopPropagation();goPage('write','${p.id}')">Edit</button>
+          <button class="pd-action-btn btn-del-post" style="font-size:11px;padding:4px 10px" onclick="event.stopPropagation();deletePost('${p.id}')">Delete</button>
+        </div>
+      </div>`).join('')}</div>`
+    :'<div class="empty-state"><div class="icon" style="font-size:40px">✍️</div><h3 style="font-size:18px">No posts yet</h3><p>Your published stories will appear here.</p></div>'}
+
+    ${drafts.length?`
+    <h3 style="font-size:22px;font-style:italic;margin:2rem 0 1rem">Drafts (${drafts.length})</h3>
+    <div class="profile-posts-grid">${drafts.map(p=>`
+      <div class="mini-post-card" style="border-style:dashed;opacity:.8">
+        <div style="font-size:24px;margin-bottom:.5rem">${p.emoji||'📝'} <span style="font-size:11px;font-family:'DM Mono',monospace;color:var(--gold);background:var(--gold-light);padding:2px 8px;border-radius:99px">DRAFT</span></div>
+        <div class="mpc-title">${p.title}</div>
+        <div style="display:flex;gap:6px;margin-top:.5rem">
+          <button class="pd-action-btn btn-edit-post" style="font-size:11px;padding:4px 10px" onclick="goPage('write','${p.id}')">Continue</button>
+          <button class="pd-action-btn btn-del-post" style="font-size:11px;padding:4px 10px" onclick="deletePost('${p.id}')">Delete</button>
+        </div>
+      </div>`).join('')}</div>`:''}`;
+}
+
+/* ═══════════════════════════════════════
+   ADMIN
+═══════════════════════════════════════ */
+function renderAdmin(){
+  if(currentUser.role!=='admin'){toast('Admin only','error');goPage('home');return}
+  const posts=DB.get('posts')||[];
+  const users=DB.get('users')||[];
+  const comments=DB.get('comments')||[];
+
+  document.getElementById('admin-stats').innerHTML=[
+    {label:'Total Posts',value:posts.filter(p=>p.status==='published').length,sub:'published'},
+    {label:'Drafts',value:posts.filter(p=>p.status==='draft').length,sub:'unpublished'},
+    {label:'Users',value:users.length,sub:'registered'},
+    {label:'Comments',value:comments.length,sub:'total'},
+  ].map(s=>`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.2rem 1.5rem">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--ink4);margin-bottom:6px;font-family:'DM Mono',monospace">${s.label}</div>
+    <div style="font-size:32px;font-weight:700;color:var(--ink);font-family:'Fraunces',serif;font-style:italic">${s.value}</div>
+    <div style="font-size:12px;color:var(--ink4);font-family:'DM Mono',monospace">${s.sub}</div>
+  </div>`).join('');
+
+  document.getElementById('admin-posts').innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">
+    ${posts.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(p=>`
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;display:flex;align-items:center;gap:10px">
+        <span style="font-size:20px">${p.emoji||'📝'}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;color:var(--ink);font-family:'Fraunces',serif;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.title}</div>
+          <div style="font-size:11px;color:var(--ink4);font-family:'DM Mono',monospace">${getUser(p.authorId).name} · ${timeAgo(p.date)}</div>
+        </div>
+        <span style="font-size:10px;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:99px;font-family:'DM Mono',monospace;${p.status==='published'?'background:#e6f4f4;color:#0f6b6b':'background:var(--gold-light);color:var(--gold)'}">${p.status}</span>
+        <button class="pd-action-btn btn-del-post" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="adminDeletePost('${p.id}')">Delete</button>
+      </div>`).join('')}
+  </div>`;
+
+  document.getElementById('admin-users').innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">
+    ${users.map(u=>`
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;display:flex;align-items:center;gap:10px">
+        ${avatarEl(u,34,12)}
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:var(--ink);font-family:'Fraunces',serif">${u.name}</div>
+          <div style="font-size:11px;color:var(--ink4);font-family:'DM Mono',monospace">${u.email}</div>
+        </div>
+        <span style="font-size:10px;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:99px;font-family:'DM Mono',monospace;${u.role==='admin'?'background:var(--accent-light);color:var(--accent)':'background:var(--teal-light);color:var(--teal)'}">${u.role}</span>
+        <span style="font-size:11px;color:var(--ink4);font-family:'DM Mono',monospace">${posts.filter(p=>p.authorId===u.id).length} posts</span>
+      </div>`).join('')}
+  </div>`;
+}
+function adminDeletePost(pid){
+  if(!confirm('Delete this post and all its comments?'))return;
+  DB.set('posts',(DB.get('posts')||[]).filter(p=>p.id!==pid));
+  DB.set('comments',(DB.get('comments')||[]).filter(c=>c.postId!==pid));
+  toast('Post deleted.','info');renderAdmin();
+}
+
+/* ═══════════════════════════════════════
+   TOAST
+═══════════════════════════════════════ */
+function toast(msg,type='info'){
+  const c=document.getElementById('toast-box');
+  const el=document.createElement('div');
+  el.className='toast '+type;
+  const icons={success:'✓',error:'✗',info:'i'};
+  el.innerHTML=`<span style="font-weight:700;font-size:13px">${icons[type]||'i'}</span><span>${msg}</span>`;
+  c.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300)},3500);
+}
+
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded',()=>{
+  // Fix auth tab text
+  setTimeout(fixTabStyles,60);
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){}});
+</script>
+</body>
+</html>
